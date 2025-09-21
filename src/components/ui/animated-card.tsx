@@ -4,12 +4,41 @@ import { useAnimations, useIntersectionAnimation } from "@/hooks/useAnimations";
 import { cn } from "@/lib/utils";
 
 interface AnimatedCardProps extends React.ComponentProps<"div"> {
-  animation?: "fade-up" | "scale" | "slide-right" | "hover-lift" | "glow";
   delay?: number;
   stagger?: boolean;
   hover?: boolean;
   loading?: boolean;
+  animation?:
+    | "fade-up"
+    | "scale"
+    | "slide-right"
+    | "hover-lift"
+    | "glow"
+    | "slide-down";
 }
+
+// Helper object for animation classes
+const animationStates = {
+  initial: {
+    "fade-up": "opacity-0 translate-y-4",
+    scale: "opacity-0 scale-95",
+    "slide-right": "opacity-0 translate-x-4",
+    "slide-down": "opacity-0 -translate-y-4",
+    default: "opacity-0",
+  },
+  animate: {
+    "fade-up": "animate-fade-in-up",
+    scale: "animate-scale-in",
+    "slide-right": "animate-slide-in-right",
+    "slide-down": "animate-slide-in-down",
+    default: "animate-fade-in",
+  },
+  hover: {
+    "hover-lift": "hover:-translate-y-2 hover:shadow-xl",
+    glow: "hover:shadow-lg hover:shadow-primary/25",
+    default: "hover:-translate-y-1 hover:shadow-lg",
+  },
+};
 
 export const AnimatedCard = React.forwardRef<HTMLDivElement, AnimatedCardProps>(
   (
@@ -29,69 +58,39 @@ export const AnimatedCard = React.forwardRef<HTMLDivElement, AnimatedCardProps>(
     const { ref: intersectionRef, isVisible } = useIntersectionAnimation();
 
     const getAnimationClasses = () => {
-      const baseClasses = getAnimationClass(
-        "transition-all duration-300 ease-out"
-      );
+      const baseClasses = "transition-all duration-300 ease-out transform";
 
       if (loading) {
         return cn(baseClasses, "animate-skeleton-pulse");
       }
 
-      let animationClasses = "";
+      const animType = animation || "default";
 
-      // Entry animations
-      if (!isVisible) {
-        switch (animation) {
-          case "fade-up":
-            animationClasses = "opacity-0 translate-y-4";
-            break;
-          case "scale":
-            animationClasses = "opacity-0 scale-95";
-            break;
-          case "slide-right":
-            animationClasses = "opacity-0 translate-x-4";
-            break;
-          default:
-            animationClasses = "opacity-0";
-        }
-      } else {
-        switch (animation) {
-          case "fade-up":
-            animationClasses = getAnimationClass("animate-fade-in-up");
-            break;
-          case "scale":
-            animationClasses = getAnimationClass("animate-scale-in");
-            break;
-          case "slide-right":
-            animationClasses = getAnimationClass("animate-slide-in-right");
-            break;
-          default:
-            animationClasses = getAnimationClass("animate-fade-in");
-        }
-      }
+      const initialClass =
+        animationStates.initial[
+          animType as keyof typeof animationStates.initial
+        ] || animationStates.initial.default;
+      const animateClass = getAnimationClass(
+        animationStates.animate[
+          animType as keyof typeof animationStates.animate
+        ] || animationStates.animate.default
+      );
 
-      // Hover animations
+      let hoverClass = "";
       if (hover && isVisible) {
-        switch (animation) {
-          case "hover-lift":
-            animationClasses += ` ${getAnimationClass(
-              "hover:-translate-y-2 hover:shadow-xl"
-            )}`;
-            break;
-          case "glow":
-            animationClasses += ` ${getAnimationClass(
-              "hover:shadow-lg hover:shadow-primary/25"
-            )}`;
-            break;
-          default:
-            animationClasses += ` ${getAnimationClass(
-              "hover:-translate-y-1 hover:shadow-lg"
-            )}`;
-        }
-        animationClasses += ` ${getAnimationClass("hover:border-primary/30")}`;
+        hoverClass =
+          getAnimationClass(
+            animationStates.hover[
+              animType as keyof typeof animationStates.hover
+            ] || animationStates.hover.default
+          ) + ` ${getAnimationClass("hover:border-primary/30")}`;
       }
 
-      return cn(baseClasses, animationClasses, "transform");
+      return cn(
+        baseClasses,
+        isVisible ? animateClass : initialClass,
+        hoverClass
+      );
     };
 
     const combinedRef = (node: HTMLDivElement) => {
@@ -129,7 +128,8 @@ export const AnimatedCard = React.forwardRef<HTMLDivElement, AnimatedCardProps>(
 
 AnimatedCard.displayName = "AnimatedCard";
 
-// Staggered cards container
+// ---------------- Staggered Cards ----------------
+
 interface StaggeredCardsProps {
   children: React.ReactNode;
   staggerDelay?: number;
@@ -152,9 +152,8 @@ export const StaggeredCards: React.FC<StaggeredCardsProps> = ({
       )}
     >
       {React.Children.map(children, (child, index) => {
-        if (React.isValidElement(child)) {
+        if (React.isValidElement<AnimatedCardProps>(child)) {
           return React.cloneElement(child, {
-            ...child.props,
             delay: index * staggerDelay,
             stagger: true,
           });

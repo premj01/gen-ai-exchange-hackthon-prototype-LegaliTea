@@ -46,6 +46,37 @@ export const useHighSeverityRisks = () => {
   });
 };
 
+// export const useDocumentStats = () => {
+//   return useAppStore(
+//     (state) => {
+//       if (!state.analysisResult) return null;
+
+//       const { keyInformation, riskAssessment, actionPlan } =
+//         state.analysisResult;
+
+//       return {
+//         totalParties: keyInformation.parties.length,
+//         totalDates: keyInformation.dates.length,
+//         totalAmounts: keyInformation.monetaryAmounts.length,
+//         totalObligations: keyInformation.obligations.length,
+//         totalRisks: riskAssessment.redFlags.length,
+//         highRisks: riskAssessment.redFlags.filter((r) => r.severity === "high")
+//           .length,
+//         totalActions: actionPlan.length,
+//         highPriorityActions: actionPlan.filter((a) => a.priority === "high")
+//           .length,
+//         overallRisk: riskAssessment.overallRisk,
+//         confidence: state.analysisResult.summary.confidence,
+//       };
+//     },
+//     (a, b) => {
+//       // Custom equality function to prevent unnecessary re-renders
+//       if (!a && !b) return true;
+//       if (!a || !b) return false;
+//       return JSON.stringify(a) === JSON.stringify(b);
+//     }
+//   );
+// };
 export const useDocumentStats = () => {
   return useAppStore(
     (state) => {
@@ -68,12 +99,7 @@ export const useDocumentStats = () => {
         overallRisk: riskAssessment.overallRisk,
         confidence: state.analysisResult.summary.confidence,
       };
-    },
-    (a, b) => {
-      // Custom equality function to prevent unnecessary re-renders
-      if (!a && !b) return true;
-      if (!a || !b) return false;
-      return JSON.stringify(a) === JSON.stringify(b);
     }
+    // The second argument has been removed.
   );
 };

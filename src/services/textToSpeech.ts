@@ -171,7 +171,10 @@ class TextToSpeechService {
       };
 
       this.currentUtterance = utterance;
-      this.synthesis.speak(utterance);
+      // this.synthesis.speak(utterance);
+      if (this.synthesis) {
+        this.synthesis.speak(utterance);
+      }
     });
   }
 
@@ -221,9 +224,8 @@ class TextToSpeechService {
 
   // Utility methods for analysis results
   speakSummary(summary: { tldr: string; keyPoints: string[] }): Promise<void> {
-    const text = `Summary: ${
-      summary.tldr
-    }. Key points: ${summary.keyPoints.join(". ")}.`;
+    const text = `Summary: ${summary.tldr
+      }. Key points: ${summary.keyPoints.join(". ")}.`;
     return this.speak(text);
   }
 

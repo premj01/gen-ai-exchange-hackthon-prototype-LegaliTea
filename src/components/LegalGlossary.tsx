@@ -275,8 +275,8 @@ export const LegalGlossary: React.FC<LegalGlossaryProps> = ({
   };
 
   const findTermReferences = (term: string, text: string) => {
-    const references = [];
-    const sentences = text.split(/[.!?]+/);
+    const references: any[] = [];
+    const sentences: any[] = text.split(/[.!?]+/);
 
     sentences.forEach((sentence, index) => {
       if (sentence.toLowerCase().includes(term.toLowerCase())) {

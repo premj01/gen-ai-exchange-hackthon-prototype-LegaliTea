@@ -3,7 +3,7 @@ import { Scale, Sparkles, Coffee } from "lucide-react";
 import { useAnimations } from "@/hooks/useAnimations";
 
 interface AnimatedLogoProps {
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "icon";
   showText?: boolean;
   showSubtext?: boolean;
   autoStart?: boolean;
@@ -59,6 +59,12 @@ export const AnimatedLogo: React.FC<AnimatedLogoProps> = ({
       text: "text-4xl",
       subtext: "text-base",
       container: "space-x-6",
+    },
+    icon: {
+      icon: "h-6 w-6",
+      text: "hidden",
+      subtext: "hidden",
+      container: "p-2",
     },
   };
 
@@ -228,7 +234,9 @@ export const AnimatedLogo: React.FC<AnimatedLogoProps> = ({
               `}
               style={{
                 backgroundSize: "200% 200%",
-                animation: `${getAnimationClass("logo-gradient")} 3s ease-in-out infinite`,
+                animation: `${getAnimationClass(
+                  "logo-gradient"
+                )} 3s ease-in-out infinite`,
               }}
             >
               LegaliTea

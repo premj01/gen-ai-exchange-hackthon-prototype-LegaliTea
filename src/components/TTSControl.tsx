@@ -11,7 +11,7 @@ interface TTSControlProps {
   risks?: Array<{ clause: string; risk: string; explanation: string }>;
   actionPlan?: Array<{ task: string; priority: string }>;
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "icon";
   variant?: "ghost" | "outline" | "default";
   showLabel?: boolean;
 }
