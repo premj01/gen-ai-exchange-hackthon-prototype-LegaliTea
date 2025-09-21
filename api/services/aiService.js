@@ -4,213 +4,213 @@ const {
 const { getLanguageName } = require('../utils/languageUtils.js');
 const { generateFallbackAnalysis } = require('../utils/fallbackAnalysis.js');
 require('dotenv').config();
-
+// brocode
 class AIService {
-    constructor() {
-        this.ai = new GoogleGenAI({
-            apiKey: process.env.GEMINI_API_KEY || 'AIzaSyAHExmwYmdSR28QOfOBQiQfaQYAmeREpXI',
-        });
-        this.model = 'gemini-2.5-flash';
+  constructor() {
+    this.ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY || 'AIzaSyAHExmwYmdSR28QOfOBQiQfaQYAmeREpXI',
+    });
+    this.model = 'gemini-2.5-flash';
+  }
+
+  async analyzeDocument(text, documentType = 'document', language = 'en') {
+    try {
+      const prompt = this.buildAnalysisPrompt(text, language);
+      const contents = [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ];
+
+      const response = await this.ai.models.generateContentStream({
+        model: this.model,
+        contents,
+      });
+
+      let analysisText = '';
+      for await (const chunk of response) {
+        analysisText += chunk.text;
+      }
+
+      // Clean up the response to extract JSON
+      let jsonText = analysisText.trim();
+
+      // Remove markdown code blocks if present
+      if (jsonText.startsWith('```json')) {
+        jsonText = jsonText.replace(/```json\n?/, '').replace(/\n?```$/, '');
+      } else if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/```\n?/, '').replace(/\n?```$/, '');
+      }
+
+      // Parse the JSON response
+      const analysis = JSON.parse(jsonText);
+
+      // Validate required fields
+      if (!analysis.summary || !analysis.keyInformation || !analysis.riskAssessment || !analysis.actionPlan) {
+        throw new Error('Invalid analysis structure from AI');
+      }
+
+      return analysis;
+    } catch (error) {
+      console.error('Gemini API error:', error);
+      // Fallback to a basic analysis if AI fails
+      return generateFallbackAnalysis(text, documentType);
     }
+  }
 
-    async analyzeDocument(text, documentType = 'document', language = 'en') {
-        try {
-            const prompt = this.buildAnalysisPrompt(text, language);
-            const contents = [
-                {
-                    role: 'user',
-                    parts: [
-                        {
-                            text: prompt,
-                        },
-                    ],
-                },
-            ];
+  async explainTerm(term, context, documentType, language = 'en') {
+    try {
+      const prompt = this.buildTermExplanationPrompt(term, context, documentType, language);
+      const contents = [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ];
 
-            const response = await this.ai.models.generateContentStream({
-                model: this.model,
-                contents,
-            });
+      const response = await this.ai.models.generateContentStream({
+        model: this.model,
+        contents,
+      });
 
-            let analysisText = '';
-            for await (const chunk of response) {
-                analysisText += chunk.text;
-            }
+      let explanationText = '';
+      for await (const chunk of response) {
+        explanationText += chunk.text;
+      }
+      explanationText = explanationText.trim();
 
-            // Clean up the response to extract JSON
-            let jsonText = analysisText.trim();
+      // Clean up JSON response
+      if (explanationText.startsWith('```json')) {
+        explanationText = explanationText.replace(/```json\n?/, '').replace(/\n?```$/, '');
+      } else if (explanationText.startsWith('```')) {
+        explanationText = explanationText.replace(/```\n?/, '').replace(/\n?```$/, '');
+      }
 
-            // Remove markdown code blocks if present
-            if (jsonText.startsWith('```json')) {
-                jsonText = jsonText.replace(/```json\n?/, '').replace(/\n?```$/, '');
-            } else if (jsonText.startsWith('```')) {
-                jsonText = jsonText.replace(/```\n?/, '').replace(/\n?```$/, '');
-            }
+      const explanation = JSON.parse(explanationText);
+      return explanation;
+    } catch (error) {
+      console.error('Term explanation error:', error);
+      return {
+        term,
+        definition: "This appears to be a legal term. Please consult a legal professional for accurate definition.",
+        category: "legal",
+        complexity: "intermediate"
+      };
+    }
+  }
 
-            // Parse the JSON response
-            const analysis = JSON.parse(jsonText);
+  async generateScenarios(clause, documentType, language = 'en') {
+    try {
+      const prompt = this.buildScenarioPrompt(clause, documentType, language);
+      const contents = [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ];
 
-            // Validate required fields
-            if (!analysis.summary || !analysis.keyInformation || !analysis.riskAssessment || !analysis.actionPlan) {
-                throw new Error('Invalid analysis structure from AI');
-            }
+      const response = await this.ai.models.generateContentStream({
+        model: this.model,
+        contents,
+      });
 
-            return analysis;
-        } catch (error) {
-            console.error('Gemini API error:', error);
-            // Fallback to a basic analysis if AI fails
-            return generateFallbackAnalysis(text, documentType);
+      let scenarioText = '';
+      for await (const chunk of response) {
+        scenarioText += chunk.text;
+      }
+      scenarioText = scenarioText.trim();
+
+      // Clean up JSON response
+      if (scenarioText.startsWith('```json')) {
+        scenarioText = scenarioText.replace(/```json\n?/, '').replace(/\n?```$/, '');
+      } else if (scenarioText.startsWith('```')) {
+        scenarioText = scenarioText.replace(/```\n?/, '').replace(/\n?```$/, '');
+      }
+
+      const scenarios = JSON.parse(scenarioText);
+      return scenarios;
+    } catch (error) {
+      console.error('Scenario generation error:', error);
+      return {
+        scenarios: [{
+          id: "fallback_1",
+          title: "General Scenario",
+          situation: "This clause may have legal implications",
+          consequences: ["Consult a legal professional for specific advice"],
+          severity: "medium"
+        }]
+      };
+    }
+  }
+
+  async generateQuiz(documentText, difficulty = 'medium', language = 'en') {
+    try {
+      const prompt = this.buildQuizPrompt(documentText, difficulty, language);
+      const contents = [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        },
+      ];
+
+      const response = await this.ai.models.generateContentStream({
+        model: this.model,
+        contents,
+      });
+
+      let quizText = '';
+      for await (const chunk of response) {
+        quizText += chunk.text;
+      }
+      quizText = quizText.trim();
+
+      // Clean up JSON response
+      if (quizText.startsWith('```json')) {
+        quizText = quizText.replace(/```json\n?/, '').replace(/\n?```$/, '');
+      } else if (quizText.startsWith('```')) {
+        quizText = quizText.replace(/```\n?/, '').replace(/\n?```$/, '');
+      }
+
+      const quiz = JSON.parse(quizText);
+      return quiz;
+    } catch (error) {
+      console.error('Quiz generation error:', error);
+      return {
+        quiz: {
+          title: "Basic Legal Quiz",
+          questions: [{
+            id: "q1",
+            type: "multiple_choice",
+            question: "What should you do when reviewing a legal document?",
+            options: ["Sign immediately", "Read carefully", "Ignore it", "Guess the meaning"],
+            correctAnswer: "Read carefully",
+            explanation: "Always read legal documents carefully before signing.",
+            points: 10
+          }]
         }
+      };
     }
+  }
 
-    async explainTerm(term, context, documentType, language = 'en') {
-        try {
-            const prompt = this.buildTermExplanationPrompt(term, context, documentType, language);
-            const contents = [
-                {
-                    role: 'user',
-                    parts: [
-                        {
-                            text: prompt,
-                        },
-                    ],
-                },
-            ];
-
-            const response = await this.ai.models.generateContentStream({
-                model: this.model,
-                contents,
-            });
-
-            let explanationText = '';
-            for await (const chunk of response) {
-                explanationText += chunk.text;
-            }
-            explanationText = explanationText.trim();
-
-            // Clean up JSON response
-            if (explanationText.startsWith('```json')) {
-                explanationText = explanationText.replace(/```json\n?/, '').replace(/\n?```$/, '');
-            } else if (explanationText.startsWith('```')) {
-                explanationText = explanationText.replace(/```\n?/, '').replace(/\n?```$/, '');
-            }
-
-            const explanation = JSON.parse(explanationText);
-            return explanation;
-        } catch (error) {
-            console.error('Term explanation error:', error);
-            return {
-                term,
-                definition: "This appears to be a legal term. Please consult a legal professional for accurate definition.",
-                category: "legal",
-                complexity: "intermediate"
-            };
-        }
-    }
-
-    async generateScenarios(clause, documentType, language = 'en') {
-        try {
-            const prompt = this.buildScenarioPrompt(clause, documentType, language);
-            const contents = [
-                {
-                    role: 'user',
-                    parts: [
-                        {
-                            text: prompt,
-                        },
-                    ],
-                },
-            ];
-
-            const response = await this.ai.models.generateContentStream({
-                model: this.model,
-                contents,
-            });
-
-            let scenarioText = '';
-            for await (const chunk of response) {
-                scenarioText += chunk.text;
-            }
-            scenarioText = scenarioText.trim();
-
-            // Clean up JSON response
-            if (scenarioText.startsWith('```json')) {
-                scenarioText = scenarioText.replace(/```json\n?/, '').replace(/\n?```$/, '');
-            } else if (scenarioText.startsWith('```')) {
-                scenarioText = scenarioText.replace(/```\n?/, '').replace(/\n?```$/, '');
-            }
-
-            const scenarios = JSON.parse(scenarioText);
-            return scenarios;
-        } catch (error) {
-            console.error('Scenario generation error:', error);
-            return {
-                scenarios: [{
-                    id: "fallback_1",
-                    title: "General Scenario",
-                    situation: "This clause may have legal implications",
-                    consequences: ["Consult a legal professional for specific advice"],
-                    severity: "medium"
-                }]
-            };
-        }
-    }
-
-    async generateQuiz(documentText, difficulty = 'medium', language = 'en') {
-        try {
-            const prompt = this.buildQuizPrompt(documentText, difficulty, language);
-            const contents = [
-                {
-                    role: 'user',
-                    parts: [
-                        {
-                            text: prompt,
-                        },
-                    ],
-                },
-            ];
-
-            const response = await this.ai.models.generateContentStream({
-                model: this.model,
-                contents,
-            });
-
-            let quizText = '';
-            for await (const chunk of response) {
-                quizText += chunk.text;
-            }
-            quizText = quizText.trim();
-
-            // Clean up JSON response
-            if (quizText.startsWith('```json')) {
-                quizText = quizText.replace(/```json\n?/, '').replace(/\n?```$/, '');
-            } else if (quizText.startsWith('```')) {
-                quizText = quizText.replace(/```\n?/, '').replace(/\n?```$/, '');
-            }
-
-            const quiz = JSON.parse(quizText);
-            return quiz;
-        } catch (error) {
-            console.error('Quiz generation error:', error);
-            return {
-                quiz: {
-                    title: "Basic Legal Quiz",
-                    questions: [{
-                        id: "q1",
-                        type: "multiple_choice",
-                        question: "What should you do when reviewing a legal document?",
-                        options: ["Sign immediately", "Read carefully", "Ignore it", "Guess the meaning"],
-                        correctAnswer: "Read carefully",
-                        explanation: "Always read legal documents carefully before signing.",
-                        points: 10
-                    }]
-                }
-            };
-        }
-    }
-
-    buildAnalysisPrompt(text, language) {
-        return `You are an advanced legal document analysis assistant. Analyze the provided legal document and return a comprehensive analysis with interactive features in JSON format. Focus on making complex legal language accessible to non-lawyers.
+  buildAnalysisPrompt(text, language) {
+    return `You are an advanced legal document analysis assistant. Analyze the provided legal document and return a comprehensive analysis with interactive features in JSON format. Focus on making complex legal language accessible to non-lawyers.
 
 Please analyze the document and respond with ONLY a valid JSON object in this exact format:
 
@@ -260,10 +260,10 @@ Document to analyze:
 IMPORTANT: Please provide the analysis in ${getLanguageName(language)} language. All explanations, summaries, and recommendations should be in ${getLanguageName(language)}.
 
 ${text}`;
-    }
+  }
 
-    buildTermExplanationPrompt(term, context, documentType, language) {
-        return `You are a legal term explanation assistant. Provide a clear, concise explanation of the legal term in context.
+  buildTermExplanationPrompt(term, context, documentType, language) {
+    return `You are a legal term explanation assistant. Provide a clear, concise explanation of the legal term in context.
 
 Respond with ONLY a valid JSON object in this format:
 {
@@ -282,10 +282,10 @@ Context: "${context || 'General legal context'}"
 Document type: "${documentType || 'legal document'}"
 
 IMPORTANT: Provide the explanation in ${getLanguageName(language)} language.`;
-    }
+  }
 
-    buildScenarioPrompt(clause, documentType, language) {
-        return `You are a legal scenario generator. Create realistic, practical scenarios that help users understand the consequences of legal clauses.
+  buildScenarioPrompt(clause, documentType, language) {
+    return `You are a legal scenario generator. Create realistic, practical scenarios that help users understand the consequences of legal clauses.
 
 Generate 3 different scenarios for the given clause. Respond with ONLY a valid JSON object:
 
@@ -309,10 +309,10 @@ Clause to analyze: "${clause}"
 Document type: "${documentType || 'legal document'}"
 
 IMPORTANT: Generate scenarios in ${getLanguageName(language)} language. Make them practical and easy to understand.`;
-    }
+  }
 
-    buildQuizPrompt(documentText, difficulty, language) {
-        return `You are a legal education quiz generator. Create educational quiz questions based on the legal document to help users learn and test their understanding.
+  buildQuizPrompt(documentText, difficulty, language) {
+    return `You are a legal education quiz generator. Create educational quiz questions based on the legal document to help users learn and test their understanding.
 
 Generate 5 quiz questions of varying types. Respond with ONLY a valid JSON object:
 
@@ -339,7 +339,7 @@ Document excerpt: "${documentText.substring(0, 2000)}..."
 Difficulty level: ${difficulty}
 
 IMPORTANT: Generate quiz in ${getLanguageName(language)} language. Focus on practical understanding, not memorization.`;
-    }
+  }
 }
 
 module.exports = new AIService();
