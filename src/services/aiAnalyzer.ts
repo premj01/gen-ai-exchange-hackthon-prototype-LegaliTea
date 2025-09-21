@@ -9,7 +9,7 @@ export interface AnalysisRequest {
 export class AIAnalyzer {
   private baseUrl: string;
 
-  constructor(baseUrl: string = "http://localhost:3001") {
+  constructor(baseUrl: string = "") {
     this.baseUrl = baseUrl;
   }
 

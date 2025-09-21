@@ -148,7 +148,7 @@ class LegalTermsService {
     }
 
     try {
-      const response = await fetch("http://localhost:3001/api/explain-term", {
+      const response = await fetch("api/explain-term", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -24,12 +24,12 @@ app.use('/api', analysisRoutes);
 // Serve static files in production (Note: express.static() won't work on Vercel)
 // Use public directory instead for static assets
 if (process.env.NODE_ENV === 'production') {
-    app.use(express.static('public'));
+  app.use(express.static('public'));
 
-    // SPA fallback for client-side routing
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
-    });
+  // SPA fallback for client-side routing
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
+  });
 }
 
 // Error handling middleware (must be last)

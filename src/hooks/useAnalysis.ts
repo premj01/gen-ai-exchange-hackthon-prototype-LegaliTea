@@ -71,7 +71,7 @@ export const useSaveAnalysis = () => {
       email: string;
       analysis: AnalysisResult;
     }) => {
-      const response = await fetch("http://localhost:3001/api/save", {
+      const response = await fetch("/api/save", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
