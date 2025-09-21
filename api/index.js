@@ -1,7 +1,5 @@
 const express = require("express");
-// const serverless = require("serverless-http");
 const cors = require("cors");
-const path = require("path");
 
 const { errorHandler } = require("./middleware/errorHandler.js");
 const { requestLogger } = require("./middleware/requestLogger.js");
@@ -25,19 +23,12 @@ app.use("/api", analysisRoutes);
 app.get("/api/hello", (req, res) => {
   res.json({ message: "Hello from Express API" });
 });
-// hi
-// Serve React build for non-API routes
-app.use(express.static(path.join(process.cwd(), "build")));
-app.get(/^(?!\/api).*/, (req, res) => {
-  res.sendFile(path.join(process.cwd(), "build", "index.html"));
-});
 
 // Error handler
 app.use(errorHandler);
 
 // Export for Vercel serverless
 module.exports = app;
-// module.exports.handler = serverless(app);
 
 // const express = require("express");
 // const serverless = require("serverless-http");
