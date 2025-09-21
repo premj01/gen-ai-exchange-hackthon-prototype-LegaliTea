@@ -21,6 +21,13 @@ app.use(rateLimiter);
 app.use('/api/health', healthRoutes);
 app.use('/api', analysisRoutes);
 
+app.post("hi", (req, res) => {
+  res.json({ msg: "Hello" })
+})
+app.post("/api/hi", (req, res) => {
+  res.json({ msg: "API Hello" })
+})
+
 // Serve static files in production (Note: express.static() won't work on Vercel)
 // Use public directory instead for static assets
 if (process.env.NODE_ENV === 'production') {
