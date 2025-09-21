@@ -11,4 +11,14 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Add this section
+  server: {
+    proxy: {
+      '/api': {
+        // Your existing "npm run server" script runs on port 3000 by default if not specified
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      }
+    }
+  }
 });
