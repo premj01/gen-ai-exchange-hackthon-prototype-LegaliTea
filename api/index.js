@@ -1,5 +1,5 @@
 const express = require("express");
-const serverless = require("serverless-http");
+// const serverless = require("serverless-http");
 const cors = require("cors");
 const path = require("path");
 
@@ -37,7 +37,7 @@ app.use(errorHandler);
 
 // Export for Vercel serverless
 module.exports = app;
-module.exports.handler = serverless(app);
+// module.exports.handler = serverless(app);
 
 // const express = require("express");
 // const serverless = require("serverless-http");
