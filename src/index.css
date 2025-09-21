@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "./styles/animations.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @theme {
   --radius-sm: calc(var(--radius) - 4px);
